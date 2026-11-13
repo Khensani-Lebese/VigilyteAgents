@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TradeLatch Dashboard</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    color: #222;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Layout */
+  nav {
+    width: 240px;
+    background: #14213d;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+  }
+  nav .logo {
+    font-weight: 900;
+    font-size: 1.6rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+    color: #00bfa6;
+    user-select: none;
+  }
+  nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+  }
+  nav ul li {
+    margin-bottom: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    transition: background 0.25s, color 0.25s;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+  nav ul li:hover, nav ul li.active {
+    background: #00bfa6;
+    color: #14213d;
+  }
+  nav ul li svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+  nav .region {
+    margin-top: auto;
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #f7f9fc;
+  }
+
+  header {
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  header .search {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  header .search input {
+    width: 100%;
+    padding: 7px 12px;
+    border: 1.8px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  header .user-greet {
+    margin-left: 1.5rem;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .banner {
+    position: relative;
+    height: 180px;
+    background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1280&q=80') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .banner .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 33, 61, 0.65);
+    border-radius: 0 0 12px 12px;
+  }
+  .banner h1 {
+    position: relative;
+    color: #00bfa6;
+    font-size: 2rem;
+    letter-spacing: 0.1em;
+    font-weight: 900;
+    z-index: 1;
+    user-select: none;
+  }
+  .banner span {
+    position: relative;
+    color: #c6f1e7;
+    font-size: 1.1rem;
+    font-weight: 600;
+    z-index: 1;
+    margin-top: 0.3rem;
+    user-select: none;
+  }
+  .banner-content {
+    text-align: center;
+    z-index: 2;
+  }
+
+  /* Summary cards */
+  .summary-cards {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border-bottom: 1px solid #ddd;
+  }
+  .card {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1.5px 8px rgba(0,0,0,0.1);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .card .title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .card .value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #14213d;
+  }
+  .card .trend {
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card .trend.positive {
+    color: #0a9d58;
+  }
+  .card .trend.negative {
+    color: #bb2c4c;
+  }
+  .sparkline {
+    height: 28px;
+    width: 100%;
+    margin-top: auto;
+    fill: none;
+    stroke: #00bfa6;
+    stroke-width: 2px;
+  }
+
+  /* Main content grid */
+  .main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  /* Left main panels stack */
+  .left-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Recent Shipments table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+  }
+  thead {
+    background: #14213d;
+    color: white;
+  }
+  thead th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+  tbody tr {
+    border-bottom: 1px solid #eee;
+  }
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+  tbody td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #222;
+  }
+
+  /* Status labels */
+  .status {
+    padding: 4px 9px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    display: inline-block;
+  }
+  .status.in-transit {
+    background: #00bfa6;
+  }
+  .status.delivered {
+    background: #0a9d58;
+  }
+  .status.pending {
+    background: #bb2c4c;
+  }
+
+  /* View action button */
+  .btn-view {
+    background: none;
+    border: none;
+    color: #00bfa6;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0;
+  }
+
+  /* AI Assistant card */
+  .ai-assistant {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    box-shadow: 0 1.5px 14px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 1.1rem;
+    align-items: center;
+  }
+  .ai-assistant .robot {
+    font-size: 3.2rem;
+    color: #00bfa6;
+    user-select: none;
+  }
+  .ai-assistant .info {
+    flex-grow: 1;
+  }
+  .ai-assistant .info strong {
+    font-weight: 900;
+    color: #14213d;
+  }
+  .ai-assistant .status {
+    font-weight: 700;
+    color: #0a9d58;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  .ai-assistant button {
+    background: #00bfa6;
+    border: none;
+    color: white;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .ai-assistant button:hover {
+    background: #00836c;
+  }
+
+  /* Recent Activity feed */
+  .recent-activity {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.07);
+  }
+  .recent-activity h3 {
+    margin-top: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #14213d;
+    margin-bottom: 0.85rem;
+    user-select: none;
+  }
+  .activity-item {
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eee;
+    padding: 0.45rem 0;
+    display: flex;
+    justify-content: space-between;
+    color: #444;
+  }
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  .activity-item time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+  }
+
+  /* Shipment Details panel */
+  .shipment-details {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.07);
+  }
+  .shipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+  }
+  .shipment-header h2 {
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: #14213d;
+    margin: 0;
+  }
+  .milestones {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .milestone {
+    text-align: center;
+    flex: 1;
+    position: relative;
+  }
+  .milestone:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 17px;
+    width: 100%;
+    height: 3px;
+    background: #ddd;
+    z-index: 0;
+    transform: translateX(50%);
+  }
+  .milestone.active > .circle {
+    background: #00bfa6;
+    box-shadow: 0 0 10px #00bfa6cc;
+  }
+  .circle {
+    width: 32px;
+    height: 32px;
+    background: #bbb;
+    border-radius: 50%;
+    margin: 0 auto 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .milestone-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .milestone-date {
+    font-size: 0.7rem;
+    color: #999;
+  }
+
+  /* Tabs */
+  .tabs {
+    border-top: 1.5px solid #ddd;
+    display: flex;
+    margin-top: 0.8rem;
+  }
+  .tab {
+    padding: 8px 18px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .tab.active {
+    border-color: #00bfa6;
+    color: #14213d;
+  }
+  .tab-content {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: #333;
+  }
+
+  /* Shipment info block */
+  .shipment-info {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.1);
+    margin-top: 1.25rem;
+  }
+  .shipment-info div {
+    margin-bottom: 0.9rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #14213d;
+  }
+  .shipment-info small {
+    font-weight: 400;
+    color: #666;
+    display: block;
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+  }
+  .evidence-thumbnail {
+    margin-top: 1rem;
+    width: 120px;
+    height: 70px;
+    background: #e3f1f0;
+    border-radius: 8px;
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=256&q=60');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    user-select: none;
+  }
+  .evidence-thumbnail::after {
+    content: "✓ Verified";
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    background: #0a9d58;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 12px;
+  }
+
+  /* Modal payment release card */
+  .modal-payment {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    background: white;
+    border-radius: 16px;
+    padding: 1.8rem 2rem;
+    width: 320px;
+    box-shadow: 0 9px 24px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .modal-payment h3 {
+    margin: 0;
+    font-weight: 900;
+    color: #00bfa6;
+    font-size: 1.5rem;
+  }
+  .transaction-info {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #14213d;
+    user-select: text;
+  }
+  .tx-hash {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #555;
+    word-break: break-all;
+  }
+  .btn-explorer {
+    margin-top: 0.8rem;
+    background: #00bfa6;
+    color: white;
+    border: none;
+    padding: 0.55rem 1.15rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  .btn-explorer:hover {
+    background: #00836c;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #999;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .modal-close:hover {
+    color: #00bfa6;
+  }
+
+  /* Upload delivery evidence panel */
+  .upload-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.1);
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .upload-area {
+    border: 2.5px dashed #00bfa6;
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .upload-area:hover {
+    background: #e6f9f7;
+  }
+  .upload-area p {
+    margin: 0;
+    font-weight: 700;
+    color: #00bfa6;
+    font-size: 1rem;
+  }
+  .upload-area small {
+    color: #00836c;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .upload-image {
+    margin-top: 12px;
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+  .upload-buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+  .btn-cancel, .btn-upload {
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.25s;
+  }
+  .btn-cancel {
+    background: #bb2c4c;
+    color: white;
+  }
+  .btn-cancel:hover {
+    background: #901e35;
+  }
+  .btn-upload {
+    background: #00bfa6;
+    color: white;
+  }
+  .btn-upload:hover {
+    background: #00836c;
+  }
+
+  /* Scrollbar style for main content */
+  main::-webkit-scrollbar {
+    width: 8px;
+  }
+  main::-webkit-scrollbar-thumb {
+    background: #00bfa6;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav aria-label="Main navigation">
+  <div class="logo" tabindex="0" aria-label="TradeLatch Logo">TradeLatch</div>
+  <ul role="menu" aria-orientation="vertical">
+    <li role="menuitem" class="active" tabindex="0" aria-current="page">
+      🏠 Dashboard
+    </li>
+    <li role="menuitem" tabindex="0">📦 Shipments</li>
+    <li role="menuitem" tabindex="0">💰 Payments</li>
+    <li role="menuitem" tabindex="0">📄 Evidence</li>
+    <li role="menuitem" tabindex="0">🤖 AI Assistant</li>
+    <li role="menuitem" tabindex="0">📊 Audit Log</li>
+    <li role="menuitem" tabindex="0">⚙ Settings</li>
+  </ul>
+  <div class="region" aria-label="Region South Africa" title="South Africa">
+    🇿🇦 South Africa
+  </div>
+</nav>
+
+<main>
+  <header>
+    <div class="search" role="search">
+      <input type="search" aria-label="Search dashboard" placeholder="Search shipments, payments..." />
+    </div>
+    <div class="user-greet" aria-live="polite">Hello, Sipho</div>
+  </header>
+
+  <section class="banner" aria-label="Banner image with slogan">
+    <div class="overlay"></div>
+    <div class="banner-content">
+      <h1>Moving Africa Forward</h1>
+      <span>Ship. Verify. Pay.</span>
+    </div>
+  </section>
+
+  <section class="summary-cards" aria-label="Key performance indicators">
+    <article class="card" aria-describedby="shipments-desc">
+      <div id="shipments-desc" class="title">Total Shipments</div>
+      <div class="value">24</div>
+      <div class="trend positive" aria-label="12 percent increase">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8" fill="none" stroke="#0a9d58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        +12%
+      </div>
+      <svg class="sparkline" viewBox="0 0 50 30" aria-hidden="true"><polyline points="0,20 10,15 20,18 30,10 40,12 50,8" stroke="#00bfa6" stroke-width="2" fill="none" /></svg>
+    </article>
+
+    <article class="card" aria-describedby="payments-desc">
+      <div id="payments-desc" class="title">Payments Released</div>
+      <div class="value">R 482,750</div>
+      <div class="trend positive" aria-label="18 percent increase">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8" fill="none" stroke="#0a9d58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        +18%
+      </div>
+    </article>
+
+    <article class="card" aria-describedby="pending-desc">
+      <div id="pending-desc" class="title">Pending Review</div>
+      <div class="value">3</div>
+      <div class="trend negative" aria-label="25 percent decrease">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M21 7l-6 6-4-4-8 8" fill="none" stroke="#bb2c4c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        −25%
+      </div>
+    </article>
+
+    <article class="card" aria-describedby="success-desc">
+      <div id="success-desc" class="title">On-Chain Success Rate</div>
+      <div class="value">100%</div>
+      <div class="trend" aria-label="No change" style="color: #999;">—</div>
+    </article>
+  </section>
+
+  <section class="main-content">
+    <div class="left-panels">
+      <section aria-label="Recent shipments">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Route</th>
+              <th scope="col">Status</th>
+              <th scope="col">Milestone</th>
+              <th scope="col" aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TL-2026-001</td>
+              <td>JHB → CPT</td>
+              <td><span class="status in-transit">In Transit</span></td>
+              <td>Loaded at JHB</td>
+              <td><button class="btn-view" aria-label="View details of TL-2026-001">View</button></td>
+            </tr>
+            <tr>
+              <td>TL-2026-002</td>
+              <td>CPT → DUR</td>
+              <td><span class="status delivered">Delivered</span></td>
+              <td>Delivered at DUR</td>
+              <td><button class="btn-view" aria-label="View details of TL-2026-002">View</button></td>
+            </tr>
+            <tr>
+              <td>TL-2026-003</td>
+              <td>DUR → CT</td>
+              <td><span class="status pending">Pending</span></td>
+              <td>Awaiting dispatch</td>
+              <td><button class="btn-view" aria-label="View details of TL-2026-003">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="ai-assistant" aria-label="AI Payment Assistant">
+        <div class="robot" aria-hidden="true">🤖</div>
+        <div class="info">
+          <span class="status" aria-live="polite">Online</span>
+          <p>Shipment <strong>TL-2026-001</strong> payment verified and ready for release.</p>
+          <button type="button" aria-label="View AI payment recommendation">View Recommendation</button>
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="recent-activity" aria-label="Recent activity feed">
+        <h3>Recent Activity</h3>
+        <div class="activity-item" tabindex="0">
+          <span>Payment released for TL-2026-002</span>
+          <time datetime="2026-11-12T23:45:00+02:00" title="2 minutes ago">2 min ago</time>
+        </div>
+        <div class="activity-item" tabindex="0">
+          <span>Delivery evidence verified for TL-2026-002</span>
+          <time datetime="2026-11-12T23:39:00+02:00" title="8 minutes ago">8 min ago</time>
+        </div>
+        <div class="activity-item" tabindex="0">
+          <span>New shipment TL-2026-003 created</span>
+          <time datetime="2026-11-12T23:20:00+02:00" title="27 minutes ago">27 min ago</time>
+        </div>
+      </section>
+    </aside>
+  </section>
+
+  <section style="padding: 1.5rem;">
+    <section class="shipment-details" aria-label="Shipment details TL-2026-001">
+      <div class="shipment-header">
+        <h2>Shipment TL-2026-001</h2>
+        <div>Johannesburg → Cape Town</div>
+      </div>
+
+      <div class="milestones" role="list" aria-label="Shipment milestones timeline">
+        <div class="milestone active" role="listitem">
+          <div class="circle" aria-hidden="true"></div>
+          <div class="milestone-label">Dispatched</div>
+          <div class="milestone-date">2026-11-09</div>
+        </div>
+        <div class="milestone active" role="listitem">
+          <div class="circle" aria-hidden="true"></div>
+          <div class="milestone-label">In Transit</div>
+          <div class="milestone-date">2026-11-10</div>
+        </div>
+        <div class="milestone" role="listitem">
+          <div class="circle" aria-hidden="true"></div>
+          <div class="milestone-label">Delivered</div>
+          <div class="milestone-date">-</div>
+        </div>
+        <div class="milestone" role="listitem">
+          <div class="circle" aria-hidden="true"></div>
+          <div class="milestone-label">Payment Ready</div>
+          <div class="milestone-date">-</div>
+        </div>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="Shipment details sections">
+        <button role="tab" aria-selected="true" aria-controls="tab-overview" id="tab-btn-overview" class="tab active" tabindex="0">Overview</button>
+        <button role="tab" aria-selected="false" aria-controls="tab-evidence" id="tab-btn-evidence" class="tab" tabindex="-1">Evidence</button>
+        <button role="tab" aria-selected="false" aria-controls="tab-payments" id="tab-btn-payments" class="tab" tabindex="-1">Payments</button>
+        <button role="tab" aria-selected="false" aria-controls="tab-auditlog" id="tab-btn-auditlog" class="tab" tabindex="-1">Audit Log</button>
+      </nav>
+      <div id="tab-overview" role="tabpanel" aria-labelledby="tab-btn-overview" class="tab-content">
+        <p><strong>Carrier:</strong> TransAfrica Logistics</p>
+        <p><strong>Value:</strong> R 245,000</p>
+        <p><strong>Agreement:</strong> Milestone-based 70/30</p>
+      </div>
+      <div id="tab-evidence" role="tabpanel" aria-labelledby="tab-btn-evidence" class="tab-content" hidden>
+        <p>Delivery evidence images and documents.</p>
+      </div>
+      <div id="tab-payments" role="tabpanel" aria-labelledby="tab-btn-payments" class="tab-content" hidden>
+        <p>Payment history and status updates.</p>
+      </div>
+      <div id="tab-auditlog" role="tabpanel" aria-labelledby="tab-btn-auditlog" class="tab-content" hidden>
+        <p>Audit logs and activity records.</p>
+      </div>
+
+      <div class="shipment-info" aria-label="Carrier and shipment information">
+        <div>Carrier: <strong>TransAfrica Logistics</strong></div>
+        <div>Value: <strong>R 245,000</strong></div>
+        <div>Agreement Type: <strong>Milestone-based 70/30</strong></div>
+        <div>
+          Delivery Evidence:
+          <div class="evidence-thumbnail" aria-label="Verified delivery evidence thumbnail"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="upload-panel" aria-label="Upload delivery evidence panel">
+      <h3>Upload Delivery Evidence</h3>
+      <label for="evidence-upload" class="upload-area" tabindex="0">
+        <p>Drag & Drop your files here or click to select</p>
+        <small>Supported formats: JPG, PNG, PDF (max 10MB)</small>
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=256&q=60" alt="Truck on highway" class="upload-image" />
+        <input type="file" id="evidence-upload" name="evidence-upload" accept=".jpg,.jpeg,.png,.pdf" style="display:none" />
+      </label>
+      <div class="upload-buttons">
+        <button type="button" class="btn-cancel" aria-label="Cancel upload">Cancel</button>
+        <button type="button" class="btn-upload" aria-label="Upload evidence" disabled>Upload</button>
+      </div>
+    </section>
+  </section>
+</main>
+
+<!-- Modal Payment Released -->
+<div class="modal-payment" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <button class="modal-close" aria-label="Close payment released dialog">&times;</button>
+  <h3 id="modal-title">Payment Released!</h3>
+  <div class="transaction-info">R 245,000 paid via XRP ledger (RLUSD)</div>
+  <div class="tx-hash" title="Transaction hash: 9B8E3F21...A7C2D1B5">Tx: 9B8E3F21...A7C2D1B5</div>
+  <a href="https://xrpl.org/" target="_blank" rel="noopener" class="btn-explorer">View on XRPL Explorer</a>
+</div>
+
+<script>
+  // Tabs interaction
+  const tabs = document.querySelectorAll(".tab");
+  const panels = document.querySelectorAll(".tab-content");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+        t.setAttribute("tabindex", "-1");
+      });
+      panels.forEach(p => p.setAttribute("hidden", "hidden"));
+
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+      tab.removeAttribute("tabindex");
+      const panel = document.getElementById(tab.getAttribute("aria-controls"));
+      panel.removeAttribute("hidden");
+      tab.focus();
+    });
+  });
+
+  // View buttons open modal example
+  const modal = document.querySelector(".modal-payment");
+  const modalClose = modal.querySelector(".modal-close");
+  const viewButtons = document.querySelectorAll(".btn-view");
+
+  viewButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.hidden = false;
+      modal.querySelector(".transaction-info").textContent =
+        "R 245,000 paid via XRP ledger (RLUSD)";
+      modal.querySelector(".tx-hash").textContent =
+        "Tx: 9B8E3F21...A7C2D1B5";
+      modal.querySelector(".btn-explorer").href = "https://xrpl.org/";
+      modal.querySelector(".btn-explorer").focus();
+    });
+  });
+
+  modalClose.addEventListener("click", () => {
+    modal.hidden = true;
+  });
+
+  // Upload panel file input interaction
+  const uploadArea = document.querySelector(".upload-area");
+  const fileInput = document.getElementById("evidence-upload");
+  const btnUpload = document.querySelector(".btn-upload");
+  const btnCancel = document.querySelector(".btn-cancel");
+
+  uploadArea.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  uploadArea.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "#e6f9f7";
+  });
+  uploadArea.addEventListener("dragleave", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "";
+  });
+  uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "";
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      updateUploadButton();
+    }
+  });
+
+  fileInput.addEventListener("change", updateUploadButton);
+
+  btnCancel.addEventListener("click", () => {
+    fileInput.value = "";
+    updateUploadButton();
+  });
+
+  function updateUploadButton() {
+    btnUpload.disabled = !fileInput.files.length;
+  }
+
+  btnUpload.addEventListener("click", () => {
+    if (fileInput.files.length) {
+      alert(`Uploaded ${fileInput.files.length} file(s).`);
+      fileInput.value = "";
+      updateUploadButton();
+    }
+  });
+</script>
+
+</body>
+</html>

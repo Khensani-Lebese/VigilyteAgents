@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TradeLatch Dashboard</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    color: #222;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Layout */
+  nav {
+    width: 240px;
+    background: #14213d;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+  }
+  nav .logo {
+    font-weight: 900;
+    font-size: 1.6rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+    color: #00bfa6;
+    user-select: none;
+    cursor: pointer;
+  }
+  nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+  }
+  nav ul li {
+    margin-bottom: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    transition: background 0.25s, color 0.25s;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+  }
+  nav ul li:hover, nav ul li.active {
+    background: #00bfa6;
+    color: #14213d;
+  }
+  nav .region {
+    margin-top: auto;
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #f7f9fc;
+  }
+
+  header {
+    height: 56px;
+    min-height: 56px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  header .search {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  header .search input {
+    width: 100%;
+    padding: 7px 12px;
+    border: 1.8px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  header .user-greet {
+    margin-left: 1.5rem;
+    font-weight: 600;
+    color: #555;
+  }
+
+  /* Page container helpers */
+  .page-view {
+    display: block;
+  }
+  .page-view[hidden] {
+    display: none;
+  }
+  .page-container {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .page-header h2 {
+    margin: 0;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: #14213d;
+  }
+  .page-header p {
+    margin: 0.25rem 0 0;
+    color: #666;
+    font-size: 0.95rem;
+  }
+
+  /* Shared Buttons & Inputs */
+  .btn-primary {
+    background: #00bfa6;
+    border: none;
+    color: white;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.25s;
+  }
+  .btn-primary:hover {
+    background: #00836c;
+  }
+  .btn-secondary {
+    background: #14213d;
+    border: none;
+    color: white;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.25s;
+  }
+  .btn-secondary:hover {
+    background: #233863;
+  }
+  .filter-bar {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .filter-bar select, .filter-bar input, .form-group input, .form-group select {
+    padding: 0.5rem 0.85rem;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    color: #222;
+  }
+
+  /* Banner */
+  .banner {
+    position: relative;
+    height: 180px;
+    background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1280&q=80') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .banner .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 33, 61, 0.65);
+    border-radius: 0 0 12px 12px;
+  }
+  .banner h1 {
+    position: relative;
+    color: #00bfa6;
+    font-size: 2rem;
+    letter-spacing: 0.1em;
+    font-weight: 900;
+    z-index: 1;
+    user-select: none;
+    margin: 0;
+  }
+  .banner span {
+    position: relative;
+    color: #c6f1e7;
+    font-size: 1.1rem;
+    font-weight: 600;
+    z-index: 1;
+    margin-top: 0.3rem;
+    display: block;
+    user-select: none;
+  }
+  .banner-content {
+    text-align: center;
+    z-index: 2;
+  }
+
+  /* Summary cards */
+  .summary-cards {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+  }
+  .summary-cards.plain-bg {
+    background: transparent;
+    border-bottom: none;
+    padding: 0;
+  }
+  .card {
+    flex: 1;
+    min-width: 180px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1.5px 8px rgba(0,0,0,0.1);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .card .title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .card .value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #14213d;
+  }
+  .card .trend {
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card .trend.positive {
+    color: #0a9d58;
+  }
+  .card .trend.negative {
+    color: #bb2c4c;
+  }
+  .sparkline {
+    height: 28px;
+    width: 100%;
+    margin-top: auto;
+    fill: none;
+    stroke: #00bfa6;
+    stroke-width: 2px;
+  }
+
+  /* Main content grid */
+  .main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  /* Left main panels stack */
+  .left-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+  }
+  thead {
+    background: #14213d;
+    color: white;
+  }
+  thead th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+  tbody tr {
+    border-bottom: 1px solid #eee;
+  }
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+  tbody td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #222;
+  }
+
+  /* Status labels */
+  .status {
+    padding: 4px 9px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    display: inline-block;
+  }
+  .status.in-transit {
+    background: #00bfa6;
+  }
+  .status.delivered {
+    background: #0a9d58;
+  }
+  .status.pending {
+    background: #bb2c4c;
+  }
+
+  /* View action button */
+  .btn-view {
+    background: none;
+    border: none;
+    color: #00bfa6;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0;
+  }
+
+  /* AI Assistant card */
+  .ai-assistant {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    box-shadow: 0 1.5px 14px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 1.1rem;
+    align-items: center;
+  }
+  .ai-assistant .robot {
+    font-size: 3.2rem;
+    color: #00bfa6;
+    user-select: none;
+  }
+  .ai-assistant .info {
+    flex-grow: 1;
+  }
+  .ai-assistant .info strong {
+    font-weight: 900;
+    color: #14213d;
+  }
+  .ai-assistant .status {
+    font-weight: 700;
+    color: #0a9d58;
+    margin-bottom: 8px;
+    display: inline-block;
+    background: none;
+    padding: 0;
+  }
+  .ai-assistant button {
+    background: #00bfa6;
+    border: none;
+    color: white;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .ai-assistant button:hover {
+    background: #00836c;
+  }
+
+  /* Recent Activity feed */
+  .recent-activity {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.07);
+  }
+  .recent-activity h3 {
+    margin-top: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #14213d;
+    margin-bottom: 0.85rem;
+    user-select: none;
+  }
+  .activity-item {
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eee;
+    padding: 0.45rem 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #444;
+  }
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  .activity-item time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #999;
+    white-space: nowrap;
+  }
+
+  /* Shipment Details panel */
+  .shipment-details {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.07);
+  }
+  .shipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+  }
+  .shipment-header h2 {
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: #14213d;
+    margin: 0;
+  }
+  .milestones {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .milestone {
+    text-align: center;
+    flex: 1;
+    position: relative;
+  }
+  .milestone:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 17px;
+    width: 100%;
+    height: 3px;
+    background: #ddd;
+    z-index: 0;
+    transform: translateX(50%);
+  }
+  .milestone.active > .circle {
+    background: #00bfa6;
+    box-shadow: 0 0 10px #00bfa6cc;
+  }
+  .circle {
+    width: 32px;
+    height: 32px;
+    background: #bbb;
+    border-radius: 50%;
+    margin: 0 auto 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .milestone-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .milestone-date {
+    font-size: 0.7rem;
+    color: #999;
+  }
+
+  /* Tabs */
+  .tabs {
+    border-top: 1.5px solid #ddd;
+    display: flex;
+    margin-top: 0.8rem;
+    background: transparent;
+    width: auto;
+    padding: 0;
+  }
+  .tab {
+    padding: 8px 18px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #666;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .tab.active {
+    border-color: #00bfa6;
+    color: #14213d;
+  }
+  .tab-content {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: #333;
+  }
+
+  /* Shipment info block */
+  .shipment-info {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.1);
+    margin-top: 1.25rem;
+  }
+  .shipment-info div {
+    margin-bottom: 0.9rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #14213d;
+  }
+  .evidence-thumbnail {
+    margin-top: 1rem;
+    width: 120px;
+    height: 70px;
+    background: #e3f1f0;
+    border-radius: 8px;
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=256&q=60');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    user-select: none;
+  }
+  .evidence-thumbnail::after {
+    content: "✓ Verified";
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    background: #0a9d58;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 12px;
+  }
+
+  /* Modal payment release card */
+  .modal-payment {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    background: white;
+    border-radius: 16px;
+    padding: 1.8rem 2rem;
+    width: 320px;
+    box-shadow: 0 9px 24px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .modal-payment[hidden] {
+    display: none;
+  }
+  .modal-payment h3 {
+    margin: 0;
+    font-weight: 900;
+    color: #00bfa6;
+    font-size: 1.5rem;
+  }
+  .transaction-info {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #14213d;
+    user-select: text;
+  }
+  .tx-hash {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #555;
+    word-break: break-all;
+  }
+  .btn-explorer {
+    margin-top: 0.8rem;
+    background: #00bfa6;
+    color: white;
+    border: none;
+    padding: 0.55rem 1.15rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  .btn-explorer:hover {
+    background: #00836c;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #999;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .modal-close:hover {
+    color: #00bfa6;
+  }
+
+  /* Upload delivery evidence panel */
+  .upload-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem 1.25rem;
+    box-shadow: 0 1.5px 12px rgba(0,0,0,0.1);
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .upload-area {
+    border: 2.5px dashed #00bfa6;
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .upload-area:hover {
+    background: #e6f9f7;
+  }
+  .upload-area p {
+    margin: 0;
+    font-weight: 700;
+    color: #00bfa6;
+    font-size: 1rem;
+  }
+  .upload-area small {
+    color: #00836c;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .upload-image {
+    margin-top: 12px;
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+  .upload-buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+  .btn-cancel, .btn-upload {
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.25s;
+  }
+  .btn-cancel {
+    background: #bb2c4c;
+    color: white;
+  }
+  .btn-cancel:hover {
+    background: #901e35;
+  }
+  .btn-upload {
+    background: #00bfa6;
+    color: white;
+  }
+  .btn-upload:hover {
+    background: #00836c;
+  }
+
+  /* Evidence Grid */
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+  .evidence-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  .evidence-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+  }
+  .evidence-card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .evidence-card-body h4 {
+    margin: 0;
+    color: #14213d;
+    font-size: 1rem;
+  }
+  .evidence-card-body p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  /* AI Chat Interface */
+  .ai-chat-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+  .chat-box {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    height: 460px;
+  }
+  .chat-messages {
+    flex-grow: 1;
+    padding: 1.25rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .msg.bot {
+    background: #f0f4f8;
+    color: #14213d;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+  .msg.user {
+    background: #00bfa6;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+  .chat-input-area {
+    border-top: 1px solid #eee;
+    padding: 0.85rem 1rem;
+    display: flex;
+    gap: 0.75rem;
+  }
+  .chat-input-area input {
+    flex-grow: 1;
+    padding: 0.6rem 0.9rem;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.92rem;
+  }
+
+  /* Settings Grid */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .settings-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .settings-card h3 {
+    margin: 0;
+    color: #14213d;
+    font-size: 1.15rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.65rem;
+  }
+  .api-dashboard {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1.5px 9px rgba(0,0,0,0.08);
+  }
+  .api-dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .api-dashboard h2, .api-dashboard h3 {
+    margin: 0;
+    color: #14213d;
+  }
+  .api-dashboard h2 {
+    font-size: 1.2rem;
+  }
+  .api-dashboard-header p {
+    margin: 0.4rem 0 0;
+    color: #666;
+  }
+  .api-status {
+    min-height: 1.4rem;
+    margin: 1rem 0;
+    color: #555;
+    font-weight: 600;
+  }
+  .api-status[data-state="error"] {
+    color: #bb2c4c;
+  }
+  .api-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  .api-list-grid h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  .api-record, .api-empty {
+    margin: 0 0 0.75rem;
+    padding: 0.85rem;
+    border: 1px solid #e5e9ef;
+    border-radius: 8px;
+    color: #555;
+  }
+  .api-record strong {
+    color: #14213d;
+  }
+  .api-record p {
+    margin: 0.45rem 0 0;
+    overflow-wrap: anywhere;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .form-group label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Scrollbar style for main content */
+  main::-webkit-scrollbar {
+    width: 8px;
+  }
+  main::-webkit-scrollbar-thumb {
+    background: #00bfa6;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav aria-label="Main navigation">
+  <div class="logo" tabindex="0" aria-label="TradeLatch Logo" data-target="dashboard">TradeLatch</div>
+  <ul role="menu" aria-orientation="vertical">
+    <li role="menuitem" class="active" tabindex="0" aria-current="page" data-target="dashboard">
+      🏠 Dashboard
+    </li>
+    <li role="menuitem" tabindex="0" data-target="shipments">📦 Shipments</li>
+    <li role="menuitem" tabindex="0" data-target="payments">💰 Payments</li>
+    <li role="menuitem" tabindex="0" data-target="evidence">📄 Evidence</li>
+    <li role="menuitem" tabindex="0" data-target="ai-assistant">🤖 AI Assistant</li>
+    <li role="menuitem" tabindex="0" data-target="audit-log">📊 Audit Log</li>
+    <li role="menuitem" tabindex="0" data-target="settings">⚙ Settings</li>
+  </ul>
+  <div class="region" aria-label="Region South Africa" title="South Africa">
+    🇿🇦 South Africa
+  </div>
+</nav>
+
+<main>
+  <header>
+    <div class="search" role="search">
+      <input type="search" aria-label="Search dashboard" placeholder="Search shipments, payments..." />
+    </div>
+    <div class="user-greet" aria-live="polite">Hello, Sipho</div>
+  </header>
+
+  <!-- ==================== 1. DASHBOARD VIEW ==================== -->
+  <div id="view-dashboard" class="page-view">
+    <section class="banner" aria-label="Banner image with slogan">
+      <div class="overlay"></div>
+      <div class="banner-content">
+        <h1>Moving Africa Forward</h1>
+        <span>Ship. Verify. Pay.</span>
+      </div>
+    </section>
+
+    <section class="summary-cards" aria-label="Key performance indicators">
+      <article class="card" aria-describedby="shipments-desc">
+        <div id="shipments-desc" class="title">Total Shipments</div>
+        <div class="value">24</div>
+        <div class="trend positive" aria-label="12 percent increase">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8" fill="none" stroke="#0a9d58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          +12%
+        </div>
+        <svg class="sparkline" viewBox="0 0 50 30" aria-hidden="true"><polyline points="0,20 10,15 20,18 30,10 40,12 50,8" stroke="#00bfa6" stroke-width="2" fill="none" /></svg>
+      </article>
+
+      <article class="card" aria-describedby="payments-desc">
+        <div id="payments-desc" class="title">Payments Released</div>
+        <div class="value">R 482,750</div>
+        <div class="trend positive" aria-label="18 percent increase">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8" fill="none" stroke="#0a9d58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          +18%
+        </div>
+      </article>
+
+      <article class="card" aria-describedby="pending-desc">
+        <div id="pending-desc" class="title">Pending Review</div>
+        <div class="value">3</div>
+        <div class="trend negative" aria-label="25 percent decrease">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path d="M21 7l-6 6-4-4-8 8" fill="none" stroke="#bb2c4c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          −25%
+        </div>
+      </article>
+
+      <article class="card" aria-describedby="success-desc">
+        <div id="success-desc" class="title">On-Chain Success Rate</div>
+        <div class="value">100%</div>
+        <div class="trend" aria-label="No change" style="color: #999;">—</div>
+      </article>
+    </section>
+
+    <section class="main-content">
+      <div class="left-panels">
+        <section aria-label="Recent shipments">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Reference</th>
+                <th scope="col">Route</th>
+                <th scope="col">Status</th>
+                <th scope="col">Milestone</th>
+                <th scope="col" aria-label="Actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TL-2026-001</td>
+                <td>JHB → CPT</td>
+                <td><span class="status in-transit">In Transit</span></td>
+                <td>Loaded at JHB</td>
+                <td><button class="btn-view" data-nav="shipments" aria-label="View details of TL-2026-001">View</button></td>
+              </tr>
+              <tr>
+                <td>TL-2026-002</td>
+                <td>CPT → DUR</td>
+                <td><span class="status delivered">Delivered</span></td>
+                <td>Delivered at DUR</td>
+                <td><button class="btn-view" data-nav="shipments" aria-label="View details of TL-2026-002">View</button></td>
+              </tr>
+              <tr>
+                <td>TL-2026-003</td>
+                <td>DUR → CT</td>
+                <td><span class="status pending">Pending</span></td>
+                <td>Awaiting dispatch</td>
+                <td><button class="btn-view" data-nav="shipments" aria-label="View details of TL-2026-003">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="ai-assistant" aria-label="AI Payment Assistant">
+          <div class="robot" aria-hidden="true">🤖</div>
+          <div class="info">
+            <span class="status" aria-live="polite">Online</span>
+            <p>Shipment <strong>TL-2026-001</strong> payment verified and ready for release.</p>
+            <button type="button" data-nav="ai-assistant" aria-label="View AI payment recommendation">View Recommendation</button>
+          </div>
+        </section>
+      </div>
+
+      <aside>
+        <section class="recent-activity" aria-label="Recent activity feed">
+          <h3>Recent Activity</h3>
+          <div class="activity-item" tabindex="0">
+            <span>Payment released for TL-2026-002</span>
+            <time datetime="2026-11-12T23:45:00+02:00" title="2 minutes ago">2 min ago</time>
+          </div>
+          <div class="activity-item" tabindex="0">
+            <span>Delivery evidence verified for TL-2026-002</span>
+            <time datetime="2026-11-12T23:39:00+02:00" title="8 minutes ago">8 min ago</time>
+          </div>
+          <div class="activity-item" tabindex="0">
+            <span>New shipment TL-2026-003 created</span>
+            <time datetime="2026-11-12T23:20:00+02:00" title="27 minutes ago">27 min ago</time>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section style="padding: 0 1.5rem 1.5rem;">
+      <section class="shipment-details" aria-label="Shipment details TL-2026-001">
+        <div class="shipment-header">
+          <h2>Shipment TL-2026-001</h2>
+          <div>Johannesburg → Cape Town</div>
+        </div>
+
+        <div class="milestones" role="list" aria-label="Shipment milestones timeline">
+          <div class="milestone active" role="listitem">
+            <div class="circle" aria-hidden="true"></div>
+            <div class="milestone-label">Dispatched</div>
+            <div class="milestone-date">2026-11-09</div>
+          </div>
+          <div class="milestone active" role="listitem">
+            <div class="circle" aria-hidden="true"></div>
+            <div class="milestone-label">In Transit</div>
+            <div class="milestone-date">2026-11-10</div>
+          </div>
+          <div class="milestone" role="listitem">
+            <div class="circle" aria-hidden="true"></div>
+            <div class="milestone-label">Delivered</div>
+            <div class="milestone-date">-</div>
+          </div>
+          <div class="milestone" role="listitem">
+            <div class="circle" aria-hidden="true"></div>
+            <div class="milestone-label">Payment Ready</div>
+            <div class="milestone-date">-</div>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Shipment details sections">
+          <button role="tab" aria-selected="true" aria-controls="tab-overview" id="tab-btn-overview" class="tab active" tabindex="0">Overview</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-evidence" id="tab-btn-evidence" class="tab" tabindex="-1">Evidence</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-payments" id="tab-btn-payments" class="tab" tabindex="-1">Payments</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-auditlog" id="tab-btn-auditlog" class="tab" tabindex="-1">Audit Log</button>
+        </div>
+        <div id="tab-overview" role="tabpanel" aria-labelledby="tab-btn-overview" class="tab-content">
+          <p><strong>Carrier:</strong> TransAfrica Logistics</p>
+          <p><strong>Value:</strong> R 245,000</p>
+          <p><strong>Agreement:</strong> Milestone-based 70/30</p>
+        </div>
+        <div id="tab-evidence" role="tabpanel" aria-labelledby="tab-btn-evidence" class="tab-content" hidden>
+          <p>Bill of Lading #BOL-9941 verified on-chain. GPS seal active.</p>
+        </div>
+        <div id="tab-payments" role="tabpanel" aria-labelledby="tab-btn-payments" class="tab-content" hidden>
+          <p>70% Dispatch Escrow (R 171,500) locked in RLUSD smart contract. 30% (R 73,500) pending delivery confirmation.</p>
+        </div>
+        <div id="tab-auditlog" role="tabpanel" aria-labelledby="tab-btn-auditlog" class="tab-content" hidden>
+          <p>2026-11-10 08:14 SAST — Departed JHB Depot (Verified by Node #04).</p>
+        </div>
+
+        <div class="shipment-info" aria-label="Carrier and shipment information">
+          <div>Carrier: <strong>TransAfrica Logistics</strong></div>
+          <div>Value: <strong>R 245,000</strong></div>
+          <div>Agreement Type: <strong>Milestone-based 70/30</strong></div>
+          <div>
+            Delivery Evidence:
+            <div class="evidence-thumbnail" aria-label="Verified delivery evidence thumbnail"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="upload-panel" aria-label="Upload delivery evidence panel">
+        <h3>Upload Delivery Evidence</h3>
+        <label for="evidence-upload" class="upload-area" tabindex="0">
+          <p>Drag & Drop your files here or click to select</p>
+          <small>Supported formats: JPG, PNG, PDF (max 10MB)</small>
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=256&q=60" alt="Truck on highway" class="upload-image" />
+          <input type="file" id="evidence-upload" name="evidence-upload" accept=".jpg,.jpeg,.png,.pdf" style="display:none" />
+        </label>
+        <div class="upload-buttons">
+          <button type="button" class="btn-cancel" aria-label="Cancel upload">Cancel</button>
+          <button type="button" class="btn-upload" aria-label="Upload evidence" disabled>Upload</button>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <!-- ==================== 2. SHIPMENTS VIEW ==================== -->
+  <div id="view-shipments" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>Shipments Management</h2>
+          <p>Track, filter, and manage active South African freight corridors.</p>
+        </div>
+        <button class="btn-primary" onclick="alert('New Shipment wizard opened.')">+ Create Shipment</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" placeholder="Filter by reference or carrier..." />
+        <select>
+          <option value="all">All Statuses</option>
+          <option value="in-transit">In Transit</option>
+          <option value="delivered">Delivered</option>
+          <option value="pending">Pending</option>
+        </select>
+        <select>
+          <option value="all">All Corridors</option>
+          <option value="jhb-cpt">JHB → CPT (N1)</option>
+          <option value="cpt-dur">CPT → DUR (N2)</option>
+          <option value="jhb-dur">JHB → DUR (N3)</option>
+        </select>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Route</th>
+            <th>Carrier</th>
+            <th>Cargo Value</th>
+            <th>Status</th>
+            <th>ETA</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>TL-2026-001</strong></td>
+            <td>JHB → CPT</td>
+            <td>TransAfrica Logistics</td>
+            <td>R 245,000</td>
+            <td><span class="status in-transit">In Transit</span></td>
+            <td>2026-11-14</td>
+            <td><button class="btn-view" data-nav="dashboard">Inspect</button></td>
+          </tr>
+          <tr>
+            <td><strong>TL-2026-002</strong></td>
+            <td>CPT → DUR</td>
+            <td>KZN Freight Express</td>
+            <td>R 189,500</td>
+            <td><span class="status delivered">Delivered</span></td>
+            <td>2026-11-12</td>
+            <td><button class="btn-view" data-nav="evidence">Proof</button></td>
+          </tr>
+          <tr>
+            <td><strong>TL-2026-003</strong></td>
+            <td>DUR → CT</td>
+            <td>Cape Hauliers Ltd</td>
+            <td>R 312,000</td>
+            <td><span class="status pending">Pending</span></td>
+            <td>2026-11-16</td>
+            <td><button class="btn-view" data-nav="dashboard">Inspect</button></td>
+          </tr>
+          <tr>
+            <td><strong>TL-2026-004</strong></td>
+            <td>PE → JHB</td>
+            <td>Eastern Cape Cargo</td>
+            <td>R 128,400</td>
+            <td><span class="status delivered">Delivered</span></td>
+            <td>2026-11-10</td>
+            <td><button class="btn-view" data-nav="payments">Receipt</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 3. PAYMENTS VIEW ==================== -->
+  <div id="view-payments" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>Payments & XRPL Escrow</h2>
+          <p>Automated stablecoin (RLUSD) milestone settlements on the XRP Ledger.</p>
+        </div>
+        <button class="btn-primary trigger-payment-modal">Release Ready Escrow (R 245,000)</button>
+      </div>
+
+      <section class="summary-cards plain-bg">
+        <article class="card">
+          <div class="title">Total Settled (YTD)</div>
+          <div class="value">R 482,750</div>
+          <div class="trend positive">+18% vs last month</div>
+        </article>
+        <article class="card">
+          <div class="title">Locked in Escrow</div>
+          <div class="value">R 557,000</div>
+          <div class="trend" style="color: #666;">2 Active Contracts</div>
+        </article>
+        <article class="card">
+          <div class="title">Avg. Settlement Speed</div>
+          <div class="value">3.8 sec</div>
+          <div class="trend positive">XRPL Finality</div>
+        </article>
+      </section>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Payment ID</th>
+            <th>Shipment</th>
+            <th>Amount (ZAR / RLUSD)</th>
+            <th>Status</th>
+            <th>XRPL Tx Hash</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PAY-8821</td>
+            <td>TL-2026-001</td>
+            <td>R 245,000</td>
+            <td><span class="status in-transit">Ready to Release</span></td>
+            <td><code>Pending Execution</code></td>
+            <td><button class="btn-primary trigger-payment-modal" style="padding: 4px 10px; font-size: 0.8rem;">Release Now</button></td>
+          </tr>
+          <tr>
+            <td>PAY-8820</td>
+            <td>TL-2026-002</td>
+            <td>R 189,500</td>
+            <td><span class="status delivered">Settled</span></td>
+            <td><code>9B8E3F21...A7C2D1B5</code></td>
+            <td><a href="https://xrpl.org/" target="_blank" rel="noopener" class="btn-view">Explorer ↗</a></td>
+          </tr>
+          <tr>
+            <td>PAY-8819</td>
+            <td>TL-2026-004</td>
+            <td>R 128,400</td>
+            <td><span class="status delivered">Settled</span></td>
+            <td><code>4F1C90D2...E8B319A0</code></td>
+            <td><a href="https://xrpl.org/" target="_blank" rel="noopener" class="btn-view">Explorer ↗</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 4. EVIDENCE VIEW ==================== -->
+  <div id="view-evidence" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>Delivery Evidence Vault</h2>
+          <p>Cryptographically hashed proof-of-delivery photos, waybills, and customs docs.</p>
+        </div>
+        <button class="btn-primary" data-nav="dashboard">+ Upload New Evidence</button>
+      </div>
+
+      <div class="evidence-grid">
+        <article class="evidence-card">
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=500&q=70" alt="Signed Waybill TL-2026-001" />
+          <div class="evidence-card-body">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>TL-2026-001 — Weighbridge Slip</h4>
+              <span class="status delivered">Verified</span>
+            </div>
+            <p>Uploaded: 2026-11-10 • JHB Depot</p>
+            <p>SHA-256: <code>e3b0c442...98fc1c14</code></p>
+          </div>
+        </article>
+
+        <article class="evidence-card">
+          <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=500&q=70" alt="Warehouse Arrival TL-2026-002" />
+          <div class="evidence-card-body">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>TL-2026-002 — Signed POD</h4>
+              <span class="status delivered">Verified</span>
+            </div>
+            <p>Uploaded: 2026-11-12 • Durban Port</p>
+            <p>SHA-256: <code>8f434346...12a90c44</code></p>
+          </div>
+        </article>
+
+        <article class="evidence-card">
+          <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=500&q=70" alt="Pending Seal Check TL-2026-003" />
+          <div class="evidence-card-body">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>TL-2026-003 — Container Seal</h4>
+              <span class="status pending">Awaiting Review</span>
+            </div>
+            <p>Uploaded: 2026-11-13 • Durban Terminal</p>
+            <p>AI OCR confidence: 98.4%</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 5. AI ASSISTANT VIEW ==================== -->
+  <div id="view-ai-assistant" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>TradeLatch AI Copilot</h2>
+          <p>Automated document verification, risk scoring, and escrow release recommendations.</p>
+        </div>
+        <span class="status delivered">● Engine Online (v2.6)</span>
+      </div>
+
+      <div class="ai-chat-layout">
+        <div class="chat-box">
+          <div class="chat-messages" id="ai-chat-messages">
+            <div class="msg bot">
+              <strong>TradeLatch AI:</strong> Sawubona Sipho! I have completed automated verification on <strong>Shipment TL-2026-001</strong>. GPS telemetry and weighbridge records match the 70/30 milestone criteria. Would you like to release R 245,000 now?
+            </div>
+            <div class="msg user">
+              Are there any anomalies on the JHB → CPT route?
+            </div>
+            <div class="msg bot">
+              <strong>TradeLatch AI:</strong> Zero anomalies detected. Temperature and seal integrity remained within 100% tolerance along the N1 corridor.
+            </div>
+          </div>
+          <form class="chat-input-area" id="ai-chat-form">
+            <input type="text" id="ai-chat-input" placeholder="Ask about shipments, customs, or escrow..." required />
+            <button type="submit" class="btn-primary">Send</button>
+          </form>
+        </div>
+
+        <div class="left-panels">
+          <div class="card">
+            <div class="title">Recommended Action</div>
+            <h3 style="margin: 0.4rem 0; color: #14213d;">Approve TL-2026-001</h3>
+            <p style="font-size: 0.88rem; color: #555; margin: 0 0 1rem;">All 3 verification checks passed with 99.6% confidence score.</p>
+            <button class="btn-primary trigger-payment-modal">Execute Smart Release</button>
+          </div>
+
+          <div class="card">
+            <div class="title">Risk & Compliance Scan</div>
+            <p style="font-size: 0.88rem; color: #0a9d58; font-weight: 700; margin: 0.4rem 0;">✓ SARS Customs Manifest Cleared</p>
+            <p style="font-size: 0.88rem; color: #0a9d58; font-weight: 700; margin: 0;">✓ Carrier KYC & Insurance Valid</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 6. AUDIT LOG VIEW ==================== -->
+  <div id="view-audit-log" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>Immutable Audit Log</h2>
+          <p>Tamper-evident ledger of all user actions, AI verifications, and on-chain events.</p>
+        </div>
+        <button class="btn-secondary" onclick="alert('Audit log exported as CSV.')">Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp (SAST)</th>
+            <th>Actor</th>
+            <th>Event Type</th>
+            <th>Reference</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-11-13 09:58:12</td>
+            <td>AI Verification Engine</td>
+            <td><span class="status in-transit">VERIFICATION</span></td>
+            <td>TL-2026-001</td>
+            <td>Milestone 2 validated; payment unlocked for release.</td>
+          </tr>
+          <tr>
+            <td>2026-11-12 23:45:00</td>
+            <td>Sipho (Admin)</td>
+            <td><span class="status delivered">PAYMENT</span></td>
+            <td>TL-2026-002</td>
+            <td>Released R 189,500 RLUSD via XRPL (Tx: 9B8E3F21...A7C2D1B5).</td>
+          </tr>
+          <tr>
+            <td>2026-11-12 23:39:14</td>
+            <td>TransAfrica Driver App</td>
+            <td><span class="status delivered">EVIDENCE</span></td>
+            <td>TL-2026-002</td>
+            <td>Signed POD image uploaded and pinned to IPFS.</td>
+          </tr>
+          <tr>
+            <td>2026-11-12 23:20:05</td>
+            <td>Sipho (Admin)</td>
+            <td><span class="status pending">SHIPMENT</span></td>
+            <td>TL-2026-003</td>
+            <td>Created new escrow contract for DUR → CT route.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 7. SETTINGS VIEW ==================== -->
+  <div id="view-settings" class="page-view" hidden>
+    <div class="page-container">
+      <div class="page-header">
+        <div>
+          <h2>Platform & Wallet Settings</h2>
+          <p>Configure your organization profile, XRPL settlement wallet, and automation rules.</p>
+        </div>
+        <button class="btn-primary" onclick="alert('Settings saved successfully!')">Save Changes</button>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Organization Profile</h3>
+          <div class="form-group">
+            <label>Account Holder</label>
+            <input type="text" value="Sipho Ndlovu" />
+          </div>
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" value="TradeLatch South Africa (Pty) Ltd" />
+          </div>
+          <div class="form-group">
+            <label>Default Currency Display</label>
+            <select>
+              <option value="ZAR">ZAR (South African Rand - R)</option>
+              <option value="RLUSD">RLUSD (Ripple USD)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>XRPL Settlement & Automation</h3>
+          <div class="form-group">
+            <label>Connected XRPL Wallet Address</label>
+            <input type="text" value="rTradeLatch9xK4mP2vQ8wL7nB3cZ1y" readonly style="background:#f7f9fc; font-family:monospace;" />
+          </div>
+          <div class="toggle-row">
+            <span>Auto-release escrow on AI verification</span>
+            <input type="checkbox" checked />
+          </div>
+          <div class="toggle-row">
+            <span>Require dual-signature above R 500,000</span>
+            <input type="checkbox" checked />
+          </div>
+          <div class="toggle-row">
+            <span>SMS & Email milestone alerts</span>
+            <input type="checkbox" checked />
+          </div>
+        </div>
+      </div>
+
+      <section class="api-dashboard" aria-labelledby="api-dashboard-title">
+        <div class="api-dashboard-header">
+          <div>
+            <h2 id="api-dashboard-title">Agent wallets and mandates</h2>
+            <p>Live records from the backend API.</p>
+          </div>
+          <button type="button" class="btn-secondary" id="refresh-api-data">Refresh</button>
+        </div>
+        <p class="api-status" id="api-status" role="status" aria-live="polite" data-state="loading">Connecting to the backend…</p>
+        <div class="api-list-grid">
+          <section aria-labelledby="wallets-title">
+            <h3 id="wallets-title">Agent wallets</h3>
+            <div class="api-list" id="wallet-list"></div>
+          </section>
+          <section aria-labelledby="mandates-title">
+            <h3 id="mandates-title">Mandates</h3>
+            <div class="api-list" id="mandate-list"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Modal Payment Released -->
+<div class="modal-payment" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <button class="modal-close" aria-label="Close payment released dialog">&times;</button>
+  <h3 id="modal-title">Payment Released!</h3>
+  <div class="transaction-info">R 245,000 paid via XRP ledger (RLUSD)</div>
+  <div class="tx-hash" title="Transaction hash: 9B8E3F21...A7C2D1B5">Tx: 9B8E3F21...A7C2D1B5</div>
+  <a href="https://xrpl.org/" target="_blank" rel="noopener" class="btn-explorer">View on XRPL Explorer</a>
+</div>
+
+<script>
+  // --- 1. Sidebar Navigation Routing ---
+  const navItems = document.querySelectorAll("nav ul li[data-target]");
+  const logoBtn = document.querySelector("nav .logo");
+  const pageViews = document.querySelectorAll(".page-view");
+
+  function switchPage(targetId) {
+    // Update active state in sidebar
+    navItems.forEach(item => {
+      const isMatch = item.getAttribute("data-target") === targetId;
+      item.classList.toggle("active", isMatch);
+      if (isMatch) {
+        item.setAttribute("aria-current", "page");
+      } else {
+        item.removeAttribute("aria-current");
+      }
+    });
+
+    // Show target view and hide others
+    pageViews.forEach(view => {
+      view.hidden = view.id !== `view-${targetId}`;
+    });
+
+    // Scroll main container back to top
+    document.querySelector("main").scrollTop = 0;
+  }
+
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      switchPage(item.getAttribute("data-target"));
+    });
+    item.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        switchPage(item.getAttribute("data-target"));
+      }
+    });
+  });
+
+  logoBtn.addEventListener("click", () => switchPage("dashboard"));
+
+  // Allow inline buttons with data-nav to switch pages too
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      switchPage(btn.getAttribute("data-nav"));
+    });
+  });
+
+  // --- 2. Shipment Details Tabs ---
+  const tabs = document.querySelectorAll(".tabs .tab");
+  const tabPanels = document.querySelectorAll(".tab-content");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+        t.setAttribute("tabindex", "-1");
+      });
+      tabPanels.forEach(panel => {
+        panel.hidden = true;
+      });
+
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+      tab.setAttribute("tabindex", "0");
+      const controlledPanel = document.getElementById(tab.getAttribute("aria-controls"));
+      if (controlledPanel) controlledPanel.hidden = false;
+    });
+  });
+
+  // --- 3. Payment Modal Logic ---
+  const modal = document.querySelector(".modal-payment");
+  const modalCloseBtn = document.querySelector(".modal-close");
+
+  modalCloseBtn.addEventListener("click", () => {
+    modal.hidden = true;
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.hidden) {
+      modal.hidden = true;
+    }
+  });
+
+  document.querySelectorAll(".trigger-payment-modal").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.hidden = false;
+    });
+  });
+
+  // --- 4. Upload Panel File Input Interaction ---
+  const uploadArea = document.querySelector(".upload-area");
+  const fileInput = document.getElementById("evidence-upload");
+  const btnUpload = document.querySelector(".btn-upload");
+  const btnCancel = document.querySelector(".btn-cancel");
+
+  uploadArea.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  uploadArea.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "#e6f9f7";
+  });
+  uploadArea.addEventListener("dragleave", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "";
+  });
+  uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = "";
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      updateUploadButton();
+    }
+  });
+
+  fileInput.addEventListener("change", updateUploadButton);
+
+  btnCancel.addEventListener("click", () => {
+    fileInput.value = "";
+    updateUploadButton();
+    modal.hidden = true;
+  });
+
+  function updateUploadButton() {
+    btnUpload.disabled = !fileInput.files.length;
+  }
+
+  btnUpload.addEventListener("click", () => {
+    if (fileInput.files.length) {
+      alert(`Uploaded ${fileInput.files.length} file(s).`);
+      fileInput.value = "";
+      updateUploadButton();
+      modal.hidden = false;
+    }
+  });
+
+  const apiStatus = document.getElementById("api-status");
+  const walletList = document.getElementById("wallet-list");
+  const mandateList = document.getElementById("mandate-list");
+  const refreshApiData = document.getElementById("refresh-api-data");
+
+  async function fetchCollection(url) {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`${url} returned HTTP ${response.status}`);
+    }
+
+    const records = await response.json();
+    if (!Array.isArray(records)) {
+      throw new Error(`${url} did not return a list`);
+    }
+    return records;
+  }
+
+  function addRecordText(record, label, value) {
+    const line = document.createElement("p");
+    const name = document.createElement("strong");
+    name.textContent = `${label}: `;
+    line.append(name, document.createTextNode(String(value)));
+    record.append(line);
+  }
+
+  function showEmptyState(container, message) {
+    const emptyState = document.createElement("p");
+    emptyState.className = "api-empty";
+    emptyState.textContent = message;
+    container.replaceChildren(emptyState);
+  }
+
+  function renderWallets(wallets) {
+    walletList.replaceChildren();
+    if (!wallets.length) {
+      showEmptyState(walletList, "No wallets have been created yet.");
+      return;
+    }
+
+    wallets.forEach(wallet => {
+      const record = document.createElement("article");
+      record.className = "api-record";
+      const name = document.createElement("strong");
+      name.textContent = wallet.name;
+      record.append(name);
+      addRecordText(record, "XRPL address", wallet.xrpl_address);
+      walletList.append(record);
+    });
+  }
+
+  function renderMandates(mandates, wallets) {
+    mandateList.replaceChildren();
+    if (!mandates.length) {
+      showEmptyState(mandateList, "No mandates have been created yet.");
+      return;
+    }
+
+    const walletNames = new Map(wallets.map(wallet => [wallet.id, wallet.name]));
+    mandates.forEach(mandate => {
+      const record = document.createElement("article");
+      record.className = "api-record";
+      const name = document.createElement("strong");
+      name.textContent = `Mandate #${mandate.id}`;
+      record.append(name);
+      addRecordText(
+        record,
+        "Wallet",
+        walletNames.get(mandate.agent_wallet) || `#${mandate.agent_wallet}`
+      );
+      addRecordText(record, "Maximum spend", mandate.max_spend_amount);
+      addRecordText(record, "Status", mandate.active ? "Active" : "Inactive");
+      const recipients = Array.isArray(mandate.allowed_recipients)
+        ? mandate.allowed_recipients.join(", ") || "None"
+        : JSON.stringify(mandate.allowed_recipients);
+      addRecordText(record, "Allowed recipients", recipients);
+      mandateList.append(record);
+    });
+  }
+
+  async function loadApiData() {
+    refreshApiData.disabled = true;
+    apiStatus.dataset.state = "loading";
+    apiStatus.textContent = "Loading wallets and mandates…";
+    try {
+      const [wallets, mandates] = await Promise.all([
+        fetchCollection("/api/wallets/"),
+        fetchCollection("/api/mandates/")
+      ]);
+      renderWallets(wallets);
+      renderMandates(mandates, wallets);
+      apiStatus.dataset.state = "success";
+      apiStatus.textContent =
+        `Connected. Loaded ${wallets.length} wallet(s) and ${mandates.length} mandate(s).`;
+    } catch (error) {
+      apiStatus.dataset.state = "error";
+      apiStatus.textContent = `Could not load backend data: ${error.message}`;
+    } finally {
+      refreshApiData.disabled = false;
+    }
+  }
+
+  refreshApiData.addEventListener("click", loadApiData);
+  loadApiData();
+
+  // --- 5. AI Assistant Interactive Chat ---
+  const chatForm = document.getElementById("ai-chat-form");
+  const chatInput = document.getElementById("ai-chat-input");
+  const chatMessages = document.getElementById("ai-chat-messages");
+
+  chatForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const userBubble = document.createElement("div");
+    userBubble.className = "msg user";
+    userBubble.textContent = text;
+    chatMessages.appendChild(userBubble);
+
+    chatInput.value = "";
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    setTimeout(() => {
+      const botBubble = document.createElement("div");
+      botBubble.className = "msg bot";
+      botBubble.innerHTML = `<strong>TradeLatch AI:</strong> I've checked the ledger for "<em>${text}</em>". All active shipments are compliant and RLUSD liquidity is ready for instant settlement.`;
+      chatMessages.appendChild(botBubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 450);
+  });
+</script>
+
+</body>
+</html>

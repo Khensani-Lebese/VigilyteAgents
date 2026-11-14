@@ -11,6 +11,8 @@ class DashboardApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'id="wallet-list"')
+        self.assertContains(response, 'fetchCollection("/api/wallets/")')
+        self.assertContains(response, 'fetchCollection("/api/mandates/")')
 
     def test_wallet_api_does_not_expose_seed(self):
         wallet = AgentWallet.objects.create(

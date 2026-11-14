@@ -1,0 +1,5 @@
+Django==6.1.3
+djangorestframework
+celery
+redis
+xrpl-py
